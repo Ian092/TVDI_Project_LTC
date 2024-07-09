@@ -26,7 +26,7 @@ class Window(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.datas = self.read_json('/Users/danny/Documents/TVDI_Project_LTC/長照機構總表_雙北市.json')
+        self.datas = self.read_json('Data/長照機構總表_雙北市.json')
         self.title("長照機構資訊")
 
         self.areas = ['中正區', '大同區', '中山區', '萬華區',
