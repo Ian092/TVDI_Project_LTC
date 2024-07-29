@@ -4,7 +4,7 @@ from tkinter import ttk
 from tkintermapview import TkinterMapView
 
 # 載入 JSON 檔案
-with open('/Users/danny/Documents/TVDI_Project_LTC/Data/長照機構總表_雙北市.json', 'r', encoding='utf-8') as file:
+with open(r'C:\Users\user\Documents\GitHub\vick_window\TVDI_Project_LTC\Data\長照機構總表_雙北市.json', 'r', encoding='utf-8') as file:
     data = json.load(file)
 
 # 區域代碼對應表
