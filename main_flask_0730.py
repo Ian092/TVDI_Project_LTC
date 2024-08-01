@@ -13,7 +13,7 @@ server = Flask(__name__)
 app = dash.Dash(__name__, server=server)
 
 # 讀取 CSV 檔案，因檔案路徑格是問題，所以在字符串前加 r
-df = pd.read_csv(r'C:\Users\user\Documents\GitHub\TVDI_Project_LTC\Data\長照機構總表_for Flask.csv')
+df = pd.read_csv(r'C:\Users\user\Documents\GitHub\TVDI_Project_LTC\Data\長照機構總表_for Flask_s.csv')
 
 # 檢查縣市和行政區欄位的值，並去除 NaN的值
 df = df.dropna(subset=['縣市', '行政區'])
