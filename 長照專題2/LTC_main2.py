@@ -10,7 +10,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import seaborn as sns
 from pandas.plotting import scatter_matrix
 from tkinter import ttk
-from sklearn.tree import DecisionTreeRegressor, plot_tree
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
 
 # 讀取CSV檔案
@@ -25,11 +25,19 @@ font_properties = FontProperties(fname=font_path)
 plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
 plt.rcParams['axes.unicode_minus'] = False  # 解決負號顯示問題
 
+# 訓練模型
+features = data[['地區人口數', '老年人口數', '長照需求人數', '老化指數', '扶老比', '就業人口', '薪資中位數', '醫療院所數', '照服人力']]
+target = data['長照機構數']
+
+X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+
+model = DecisionTreeRegressor(random_state=42)
+model.fit(X_train, y_train)
+
 # 建立主視窗
 root = tk.Tk()
 root.title("長照機構數據分析")
 root.geometry("1700x500")
-#root.option_add("*Font", "微軟正黑體 12")
 
 # 顯示CSV資料的函數
 def show_data():
@@ -94,22 +102,34 @@ def show_box_plot():
     window = tk.Toplevel(root)
     window.title("盒鬚圖")
 
-    variables = ['地區人口數','老年人口數','長照需求人數','老化指數','扶老比','就業人口','薪資中位數','醫療院所數','照服人力','長照機構數']
-    num_vars = len(variables)
+    fig, ax = plt.subplots(figsize=(3, 5))
+    
+    data_to_plot = data['長照機構數']
+    boxplot = ax.boxplot(data_to_plot, showmeans=True)
 
-    fig, axs = plt.subplots(2, 5, figsize=(20, 15))
+    # 計算盒鬚圖數據
+    min_val = np.min(data_to_plot)
+    Q1 = np.percentile(data_to_plot, 25)
+    median = np.median(data_to_plot)
+    Q3 = np.percentile(data_to_plot, 75)
+    max_val = np.max(data_to_plot)
+    mean_val = np.mean(data_to_plot)
+    std_dev = np.std(data_to_plot)
+    outliers = [y for stat in boxplot['fliers'] for y in stat.get_ydata()]
 
-    for i, var in enumerate(variables):
-        row = i // 5
-        col = i % 5
-        axs[row, col].boxplot(data[var], vert=True, patch_artist=True, boxprops=dict(facecolor="lightblue"))
-        axs[row, col].set_title(f'{var} 的盒鬚圖', fontproperties=font_properties)
-        axs[row, col].set_ylabel(var, fontproperties=font_properties)
-        axs[row, col].grid(True)
+    # 添加文本標籤
+    ax.text(1.1, min_val, f'最小值: {min_val}', horizontalalignment='left', size='small', color='black')
+    ax.text(1.1, Q1, f'Q1: {Q1}', horizontalalignment='left', size='small', color='black')
+    ax.text(1.1, median, f'中位數: {median}', horizontalalignment='left', size='small', color='black')
+    ax.text(1.1, Q3, f'Q3: {Q3}', horizontalalignment='left', size='small', color='black')
+    ax.text(1.1, max_val, f'最大值: {max_val}', horizontalalignment='left', size='small', color='black')
+    ax.text(1.1, mean_val, f'平均值: {mean_val:.2f}', horizontalalignment='left', size='small', color='blue')
 
-    # 調整佈局
-    plt.tight_layout()
+    for outlier in outliers:
+        ax.text(1.1, outlier, f'{outlier}', horizontalalignment='left', size='small', color='red')
 
+    ax.set_title('長照機構數')
+    
     canvas = FigureCanvasTkAgg(fig, master=window)
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -152,28 +172,6 @@ def show_heatmap():
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-def show_decision_tree():
-    window = tk.Toplevel(root)
-    window.title("決策樹圖")
-
-    global model
-    features = data[['地區人口數', '老年人口數', '長照需求人數', '老化指數', '扶老比', '就業人口', '薪資中位數', '醫療院所數', '照服人力']]
-    target = data['長照機構數']
-
-    X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
-
-    model = DecisionTreeRegressor(random_state=42)
-    model.fit(X_train, y_train)
-
-    fig, ax = plt.subplots(figsize=(20, 10))
-    plot_tree(model, feature_names=features.columns.tolist(), filled=True, rounded=True, fontsize=10, ax=ax)
-
-    ax.set_title("長照機構數的決策樹", fontproperties=font_properties)
-
-    canvas = FigureCanvasTkAgg(fig, master=window)
-    canvas.draw()
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
 # 表格顯示區
 frame = tk.Frame(root)
 frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
@@ -206,11 +204,8 @@ btn_box_plot.grid(row=0, column=2, padx=15, pady=10)
 btn_heatmap = tk.Button(buttons_frame, text="熱力圖", command=show_heatmap, font=("微軟正黑體", 12), width=12)
 btn_heatmap.grid(row=0, column=4, padx=15, pady=10)
 
-btn_decision_tree = tk.Button(buttons_frame, text="決策樹圖", command=show_decision_tree, font=("微軟正黑體", 12), width=12)
-btn_decision_tree.grid(row=0, column=5, padx=15, pady=10)
-
 btn_actual_vs_predicted = tk.Button(buttons_frame, text="實際和預測圖", command=show_actual_vs_predicted, font=("微軟正黑體", 12), width=12)
-btn_actual_vs_predicted.grid(row=0, column=6, padx=15, pady=10)
+btn_actual_vs_predicted.grid(row=0, column=5, padx=15, pady=10)
 
 # 顯示CSV資料
 show_data()
